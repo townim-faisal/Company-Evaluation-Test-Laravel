@@ -48,14 +48,15 @@ class HomeController extends Controller
                         $evaluation = Evaluation::where('organization_id', Auth::user()->organization_id)->where('status', 1)->firstOrFail();
                         $member = Member::where('email', Auth::user()->email)->first();
                         $oldMarks = EvaluationMark::where('valuator_id', $member->id)->where('evaluation_id', $evaluation->id)->count();
+                        $oldNatures = DB::table('members_natures')->select('member_id', 'nature_id', 'nature_point')->where('valuator_id', $member->id)->get();
                         //dd($member->id);
                         $userData = array('active' => $activeEvaluation, 'oldMarks' => $oldMarks);
                         if ($oldMarks == 0) {
-                            $goods = Nature::where('evaluation_id', $evaluation->id)->where('type', 1)->get();
+                            $goods = Nature::where('evaluation_id', $evaluation->id)->get();
                             //$member = Member::where('email', Auth::user()->email)->first();
                             $teams = $member->evaluationTeams()->where('evaluation_id', $evaluation->id)->get();
                             //dd();
-                            $userData = array('active' => $activeEvaluation, 'oldMarks' => $oldMarks, 'goods' => $goods, 'teams' => $teams, 'evaluator' => $member->id);
+                            $userData = array('active' => $activeEvaluation, 'oldMarks' => $oldMarks, 'goods' => $goods, 'teams' => $teams, 'evaluator' => $member->id, 'oldNatures' => $oldNatures, );
                         }
                     } else {
                         $userData = array('active' => 0);

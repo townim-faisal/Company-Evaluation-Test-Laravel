@@ -256,7 +256,7 @@ class HrController extends Controller
                     $data = ['name' => $name, 'evaluationName' => $evaluationName, 'email' => $email] ;
                     
                     //Event-Listener
-                    //event(new EvaluationStart($data));
+                    event(new EvaluationStart($data));
 
                     //Mail by manually
                     /*Mail::queue( 'evalMail', $data, function ($message) use ($email, $name, $evaluationName) {
@@ -282,14 +282,15 @@ class HrController extends Controller
 
             //Work Related
             $baddNatures = $request->input('bads');
-            foreach($baddNatures as $baddNatures){
-                if(!empty($baddNatures)){
-                    $baddNatures = new Nature();
-                    $baddNatures->evaluation_id = $evaluationId;
-                    $baddNatures->serial = $j;
-                    $baddNatures->detail = $goodNature;
-                    $baddNatures->type = 0;
-                    $baddNatures->save();
+            //dd($baddNatures);
+            foreach($baddNatures as $badNature){
+                if(!empty($badNature)){
+                    $natureBad = new Nature();
+                    $natureBad->evaluation_id = $evaluationId;
+                    $natureBad->serial = $j;
+                    $natureBad->detail = $badNature;
+                    $natureBad->type = 0;
+                    $natureBad->save();
                     $j++;
                 }
             }
@@ -305,6 +306,7 @@ class HrController extends Controller
         $evaluation = Evaluation::where('organization_id', Auth::user()->organization_id)
             ->where('status', 1)->firstOrFail();
         $goods = Nature::where('evaluation_id', $evaluation->id)->get();
+        //dd($goods);
         $teams = $member->evaluationTeams()->where('evaluation_id', $evaluation->id)->get();
         $oldMarks = EvaluationMark::where('valuator_id', $member->id)->where('evaluation_id', $evaluation->id)->get();
         $oldNatures = DB::table('members_natures')->select('member_id', 'nature_id', 'nature_point')->where('valuator_id', $member->id)->get();
@@ -338,6 +340,7 @@ class HrController extends Controller
 
     public function saveMarks(Request $request){
         //dd($request);
+
         DB::transaction(function ($request) use ($request){
             $evaluation = Evaluation::where('organization_id', Auth::user()->organization_id)->where('status', 1)->firstOrFail();
             //dd(EvaluationMark::where('evaluation_id', $evaluation->id)->where('valuator_id', $request->input('valuator'))->firstOrFail());
@@ -470,12 +473,11 @@ class HrController extends Controller
                 $memberIDs[] = $evaluationMarksID->valuator_id;
                 //dd(DB::table('members')->where('id', $evaluationMarksID->member_id)->first());
             }
-            //those who attend in evaluation test
-            
+            //those who attend in evaluation test            
             $memberMarkIDs = array_unique($memberIDs);
         } 
 
-        $members = DB::table('members')->select('id')->get();
+        $members = DB::table('members')->select('id')->where('organization_id', Auth::user()->organization_id)->get();
         foreach($members as $member){
             $totalMembers[] = $member->id;
         }

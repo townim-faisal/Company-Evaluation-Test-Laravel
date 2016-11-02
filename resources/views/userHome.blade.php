@@ -20,7 +20,7 @@
         <div class="panel-body Next">
             <div class="row">
                 <div class="col-md-12">
-                <p>এই ধাপে আপনার হাতে কিছু নম্বর (মেন্টর সহ ৬০ এবং মেন্টর ছাড়া ৫০) দেওয়া হচ্ছে। এই নম্বর আপনি নির্দিষ্ট সদস্যের (নিজেকে সহ) আচার-আচরণ, কাজের দক্ষতা, টিমে বা কোম্পানিতে তার অবদান, সহযোগিতা মূলক মনোভাব, প্রতিষ্ঠান ও কাজের প্রতি শ্রদ্ধা বোধ প্রভৃতি বিষয়গুলোকে মাথায় রেখে বণ্টন করতে পারেন। </p>
+                <p>এই ধাপে আপনার হাতে কিছু নম্বর দেওয়া হচ্ছে। এই নম্বর আপনি নির্দিষ্ট সদস্যের (নিজেকে সহ) আচার-আচরণ, কাজের দক্ষতা, টিমে বা কোম্পানিতে তার অবদান, সহযোগিতা মূলক মনোভাব, প্রতিষ্ঠান ও কাজের প্রতি শ্রদ্ধা বোধ প্রভৃতি বিষয়গুলোকে মাথায় রেখে বণ্টন করতে পারেন। </p>
                 </div>
             </div>
         </div>
@@ -44,7 +44,7 @@
                     </tr>
                     @foreach($goods as $good)
                         <tr>
-                            <td>{{$good->serial}}
+                            <td @if($good->type=="0") bgcolor="#D2D2C1" @endif>{{$good->serial}}
                             <input type="hidden" name="natures[]" value="{{$good->id}}"></td>
                             <td>{{$good->detail}}</td>
                             @foreach($team->members->sortBy('pin') as $member)
@@ -76,7 +76,7 @@
                 <input type="hidden" name="teams[]" value="{{$team->id}}">
                 @if($team->coordinator_id == null || $team->coordinator_id == '')
                     <div class="evaTeamHeader"> {{$team->name}} (নম্বর ভিত্তিক মূল্যায়ন)</div>
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover marks">
                         <tbody>
                         <tr>
                             <th>Pin</th>
@@ -91,15 +91,14 @@
                             </tr>
                         @endforeach
                         <tr>
-                            <td colspan="2">অবশিষ্ট নম্বর</td>
-                            <td>৬০</td>
-                            <td>৫০</td>
+                            <td colspan="2">মোট নম্বর</td>
+                            <td class="totalMarkWoc">{{($team->members->count())*10}}</td>
                         </tr>
                         </tbody>
                     </table>
                 @else
                     <div class="evaTeamHeader"> {{$team->name}} (নম্বর ভিত্তিক মূল্যায়ন)</div>
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover marks">
                         <tbody>
                         <tr>
                             <th>Pin</th>
@@ -112,7 +111,7 @@
                                 <td>{{$member->pin}}</td>
                                 <td>{{$member->name}}</td>
                                 <td><input type="text" name="team{{$team->id}}member{{$member->id}}markwc" value=""></td>
-                                <td>@if($member->id !== $team->coordinator_id)
+                                <td>@if($member->id != $team->coordinator_id)
                                 <input type="text" name="team{{$team->id}}member{{$member->id}}markwoc" value="">
                                 @else 
                                 প্রযোজ্য নয়
@@ -120,9 +119,9 @@
                             </tr>
                         @endforeach
                         <tr>
-                            <td colspan="2">অবশিষ্ট নম্বর</td>
-                            <td>৬০</td>
-                            <td>৫০</td>
+                            <td colspan="2">মোট নম্বর</td>
+                            <td class="totalMarkWc">{{$team->members->count()*10}}</td>
+                            <td class="totalMarkWoc">{{($team->members->count()-1)*10}}</td>
                         </tr>
                         </tbody>
                     </table>
@@ -154,6 +153,65 @@
         $("button.prev").click(function(){
             $(".Prev").show();
             $(".Next").hide();
+        });
+
+        var totalMarkWc = []; 
+        var totalMarkWoc = [];  
+        
+        $("table.marks").each(function(index, element){
+            var x = $(element).find("td.totalMarkWc").text();
+            var y = $(element).find("td.totalMarkWoc").text();
+            if(x == '') {x =0};
+            if(y == '') {y =0};
+            totalMarkWc[index] = parseInt(x); 
+            totalMarkWoc[index] = parseInt(y);
+        });
+            
+        console.log("totalMarkWoc="+totalMarkWoc);
+        console.log("totalMarkWc="+totalMarkWc);
+        
+        $("button[type='submit']").click(function(event){
+            //event.preventDefault();
+            var totalWOCUser = [];
+            var totalWCUser = [];
+            $("table.marks").each(function(index, element){
+                totalWOCUser[index] = 0;  
+                $(element).find("input[name$='markwoc']").each(function(){
+                    var x = $(this).val();
+                    if(x == ''){x = 0;}
+                    totalWOCUser[index] += parseInt(x);
+                });
+            });
+            
+            $("table.marks").each(function(index, element){
+                totalWCUser[index] = 0;  
+                $(element).find("input[name$='markwc']").each(function(){
+                    var x = $(this).val();
+                    if(x == ''){x = 0;}
+                    totalWCUser[index] += parseInt(x);
+                });
+            });
+            
+            $("table.marks").each(function(i){
+                console.log("woc="+totalWOCUser);
+                console.log("wc="+totalWCUser);
+                if(totalWCUser[i]>totalMarkWc[i]){
+                    event.preventDefault();
+                    alert("Your total mark with co-ordinator is greater than total mark with co-ordinator");
+                }
+                if(totalWOCUser[i]>totalMarkWoc[i]){
+                    event.preventDefault();
+                    alert("Your total mark without co-ordinator is greater than total mark with co-ordinator");
+                }
+                if(totalWCUser[i]<totalMarkWc[i]){
+                    event.preventDefault();
+                    alert("Your total mark with co-ordinator is lower than total mark with co-ordinator");
+                }
+                if(totalWOCUser[i]<totalMarkWoc[i]){
+                    event.preventDefault();
+                    alert("Your total mark without co-ordinator is lower than total mark with co-ordinator");
+                }
+            });
         });
         /*var members = [];
         $.ajax({

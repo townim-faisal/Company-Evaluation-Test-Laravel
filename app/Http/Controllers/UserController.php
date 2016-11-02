@@ -47,7 +47,7 @@ class UserController extends Controller
                 //dd($members);
                 foreach($members as $member){
                     if($member != null && $member != ''){
-                        if($request->input('team'.$team.'member'.$member.'markwc') != null && $request->input('team'.$team.'member'.$member.'markwc') != ''){
+                        /*if($request->input('team'.$team.'member'.$member.'markwoc') != null && $request->input('team'.$team.'member'.$member.'markwoc') != ''){*/
                             /*$evaluationMark = EvaluationMark::where('evaluation_id', $evaluation->id)->where('valuator_id', $request->input('valuator'))->firstOrFail();
 
                             if($evaluationMark == null) */
@@ -55,33 +55,35 @@ class UserController extends Controller
                             $evaluationMark->evaluation_id = $evaluation->id;
                             $evaluationMark->evaluation_team_id = $team;
                             $evaluationMark->member_id = $member;
-                            $evaluationMark->mark_with_coordinator = $request->input('team'.$team.'member'.$member.'markwc');
+                            $evaluationMark->mark_with_coordinator = $request->input('team'.$team.'member'.$member.'markwc') == null || $request->input('team'.$team.'member'.$member.'markwc') == '' ? '' : $request->input('team'.$team.'member'.$member.'markwc');
                             $evaluationMark->mark_without_coordinator = $request->input('team'.$team.'member'.$member.'markwoc') == null || $request->input('team'.$team.'member'.$member.'markwoc') == '' ? '' : $request->input('team'.$team.'member'.$member.'markwoc');
                             $evaluationMark->valuator_id = $request->input('valuator');
                             $evaluationMark->save();
 
-                            $oldNatures = Member::find($member)->natures()->where('evaluation_id', $evaluation->id)
-                                ->where('valuator_id', $request->input('valuator'))
-                                ->where('member_id', $member)->pluck('members_natures.id');
+                            $oldNatures = Member::find($member)->natures()->where('evaluation_id', $evaluation->id)->where('valuator_id', $request->input('valuator'))->where('member_id', $member)->pluck('members_natures.id');
+                            
                             DB::table('members_natures')->whereIn('id', $oldNatures)->delete();
+                            //dd($oldNatures);
                             $natures = $request->input('natures');
                             $nature_points = $request->input('team'.$team.'member'.$member.'natures');
                             //dd($nature_points);
                             if(!empty($natures)) {
+                                //dd($natures);
                                 foreach ($natures as $key=>$value) {
                                     //dd($nature_points[$key]);
-                                    if($nature_points[$key] !== '0'){
-                                    Member::find($member)->natures()->save(
-                                        Nature::find($value), 
-                                        array(
-                                            'valuator_id' => $request->input('valuator'), 
-                                            'nature_point' => $nature_points[$key]
-                                        )
+                                    if(array_key_exists($key,$nature_points) && $nature_points[$key] !== '0'){
+                                        //dd(Member::find($member)->natures());
+                                        Member::find($member)->natures()->save(
+                                            Nature::find($value), 
+                                            array(
+                                                'valuator_id' => $request->input('valuator'), 
+                                                'nature_point' => $nature_points[$key]
+                                            )
                                         );
                                     }
                                 }
                             }
-                        }
+                        /*}*/
                     }
                 }
             }
